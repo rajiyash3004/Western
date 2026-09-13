@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | Western Avenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Sacramento&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/img/logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="assets/css/style.css">
+<!-- EmailJS: only needed if you want a real email sent to the shop admin on
+     order placement. Sign up free at https://www.emailjs.com, then fill in
+     the three placeholders in the script below. See README.md. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <a href="index.html" class="logo">
+    <img src="assets/img/logo.jpg" alt="Western Avenue logo" class="logo-img">
+    <span class="logo-text"><span class="display">WESTERN</span><span class="script">Avenue</span></span>
+  </a>
+  <a href="cart.html" style="font-size:12px; letter-spacing:0.08em; color:var(--bone-dim);">← Back to bag</a>
+</header>
+
+<div class="page-header">
+  <h1>Checkout</h1>
+  <p>Shipping details, then payment. Almost there.</p>
+</div>
+
+<div class="wrap">
+  <form id="checkoutForm" class="checkout-layout" novalidate>
+    <div>
+      <div class="checkout-section">
+        <h3>Contact &amp; Shipping</h3>
+
+        <div class="field">
+          <label for="coFullName">Full name</label>
+          <input type="text" id="coFullName" required placeholder="Your full name" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label for="coEmail">Email address</label>
+          <div class="input-wrap">
+            <input type="email" id="coEmail" required placeholder="you@example.com" autocomplete="email">
+            <span class="status-icon" id="coEmailIcon"></span>
+            <div class="domain-suggest" id="coDomainSuggest"></div>
+          </div>
+          <div class="field-hint" id="coEmailHint"></div>
+        </div>
+
+        <div class="field">
+          <label for="coPhone">Phone number</label>
+          <input type="tel" id="coPhone" required placeholder="10-digit mobile number" autocomplete="tel">
+        </div>
+
+        <div class="field">
+          <label for="coAddress">Address</label>
+          <textarea id="coAddress" required placeholder="House / street / area"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label for="coCity">City</label><input type="text" id="coCity" required placeholder="City"></div>
+          <div class="field"><label for="coState">State</label><input type="text" id="coState" required placeholder="State"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="coPincode">Pincode</label><input type="text" id="coPincode" required placeholder="6-digit pincode"></div>
+          <div class="field"><label for="coCountry">Country</label><input type="text" id="coCountry" value="India" required></div>
+        </div>
+      </div>
+
+      <div class="checkout-section">
+        <h3>Payment Method</h3>
+        <div class="payment-options">
+          <label class="payment-option selected">
+            <input type="radio" name="payment" value="Card" checked> Credit / Debit Card
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="payment" value="UPI"> UPI
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="payment" value="COD"> Cash on Delivery
+          </label>
+        </div>
+        <p style="font-size:11px; color:var(--bone-dim); margin-top:16px; line-height:1.6;">
+          This is a demo checkout — no card details are collected or charged. Wiring up real payments needs a licensed
+          payment gateway (Razorpay, Stripe, etc.) on a proper backend. See README.md.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div class="checkout-section">
+        <h3>Order Summary</h3>
+        <div id="orderItemsList"></div>
+        <div class="summary-row total"><span>Total</span><span id="coTotal">Rs. 0.00</span></div>
+        <button type="submit" class="btn btn-full" id="placeOrderBtn" style="margin-top:22px;">Place Order ↗</button>
+        <div class="form-msg" id="checkoutMsg"></div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<footer>
+  <div class="wrap footer-bottom"><span>© <span id="year"></span> Western Avenue — She Rides Alone.</span></div>
+</footer>
+
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/email-assist.js"></script>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  waSetupEmailAssist('coEmail','coEmailIcon','coEmailHint','coDomainSuggest');
+
+  document.querySelectorAll('.payment-option').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      document.querySelectorAll('.payment-option').forEach(function(o){ o.classList.remove('selected'); });
+      opt.classList.add('selected');
+    });
+  });
+
+  function renderOrderSummary(){
+    const cart = waGetCart();
+    const list = document.getElementById('orderItemsList');
+    if(cart.length === 0){
+      list.innerHTML = '<p style="font-size:13px; color:var(--bone-dim);">Your bag is empty. <a href="index.html#shop" style="color:var(--gold);">Go add something.</a></p>';
+      document.getElementById('placeOrderBtn').disabled = true;
+    } else {
+      list.innerHTML = cart.map(function(i){
+        return '<div class="order-item-row"><span>' + i.name + ' × ' + i.qty + '</span><span>' + waFormatRs(i.price * i.qty) + '</span></div>';
+      }).join('');
+    }
+    document.getElementById('coTotal').textContent = waFormatRs(waCartTotal());
+  }
+  renderOrderSummary();
+
+  /* ====== EmailJS CONFIG — fill these in with your own EmailJS account ======
+     1. Create a free account at https://www.emailjs.com
+     2. Add an Email Service (e.g. Gmail) -> copy the Service ID
+     3. Create an Email Template with variables like {{order_id}}, {{customer_name}},
+        {{customer_email}}, {{items}}, {{total}}, {{address}} -> copy the Template ID
+     4. Copy your Public Key from Account > API Keys
+     Paste all three below. Until you do, orders still save locally and show
+     up in admin.html — they just won't trigger a real email. */
+  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';
+  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+  const ADMIN_NOTIFY_EMAIL  = 'admin@westernavenue.example';
+
+  let emailjsReady = false;
+  try{
+    if(EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY' && window.emailjs){
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      emailjsReady = true;
+    }
+  }catch(e){ emailjsReady = false; }
+
+  document.getElementById('checkoutForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const cart = waGetCart();
+    if(cart.length === 0) return;
+
+    const msg = document.getElementById('checkoutMsg');
+    const email = document.getElementById('coEmail').value.trim();
+
+    if(!waIsValidEmail(email)){
+      msg.textContent = 'Please enter a valid email address.';
+      msg.classList.add('show','error');
+      return;
+    }
+
+    const order = {
+      id: 'WA-' + Date.now().toString().slice(-8),
+      date: new Date().toISOString(),
+      customer: {
+        name: document.getElementById('coFullName').value.trim(),
+        email: email,
+        phone: document.getElementById('coPhone').value.trim(),
+        address: document.getElementById('coAddress').value.trim(),
+        city: document.getElementById('coCity').value.trim(),
+        state: document.getElementById('coState').value.trim(),
+        pincode: document.getElementById('coPincode').value.trim(),
+        country: document.getElementById('coCountry').value.trim()
+      },
+      payment: document.querySelector('input[name="payment"]:checked').value,
+      items: cart,
+      total: waCartTotal(),
+      status: 'Placed'
+    };
+
+    const orders = JSON.parse(localStorage.getItem('wa_orders') || '[]');
+    orders.unshift(order);
+    localStorage.setItem('wa_orders', JSON.stringify(orders));
+
+    const itemsText = cart.map(function(i){ return i.name + ' x' + i.qty + ' (' + waFormatRs(i.price * i.qty) + ')'; }).join(', ');
+    const fullAddress = [order.customer.address, order.customer.city, order.customer.state, order.customer.pincode, order.customer.country].filter(Boolean).join(', ');
+
+    function finish(emailSent){
+      localStorage.removeItem('wa_cart');
+      msg.classList.remove('error');
+      msg.textContent = emailSent
+        ? 'Order ' + order.id + ' placed! A confirmation email is on its way. Redirecting…'
+        : 'Order ' + order.id + ' placed and saved! (Email notifications are not configured yet — see README.)';
+      msg.classList.add('show');
+      document.getElementById('placeOrderBtn').disabled = true;
+      setTimeout(function(){ window.location.href = 'index.html'; }, 2200);
+    }
+
+    if(emailjsReady){
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: ADMIN_NOTIFY_EMAIL,
+        order_id: order.id,
+        customer_name: order.customer.name,
+        customer_email: order.customer.email,
+        customer_phone: order.customer.phone,
+        address: fullAddress,
+        items: itemsText,
+        total: waFormatRs(order.total),
+        payment: order.payment
+      }).then(function(){ finish(true); }).catch(function(){ finish(false); });
+    } else {
+      finish(false);
+    }
+  });
+</script>
+
+</body>
+</html>

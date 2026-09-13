@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | Western Avenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Sacramento&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/img/logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <a href="index.html" class="logo">
+    <img src="assets/img/logo.jpg" alt="Western Avenue logo" class="logo-img">
+    <span class="logo-text"><span class="display">WESTERN</span><span class="script">Avenue</span></span>
+  </a>
+  <a href="index.html" style="font-size:12px; letter-spacing:0.08em; color:var(--bone-dim);">← Back to shop</a>
+</header>
+
+<div class="admin-wrap wrap">
+
+  <div id="adminLoginGate">
+    <div class="admin-login">
+      <div class="section-tag">Staff Only</div>
+      <h2 class="section-title">Admin Sign In</h2>
+      <p style="font-size:13px; color:var(--bone-dim); margin-bottom:24px;">
+        Demo password: <b style="color:var(--gold);">avenue2024</b> — this is a client-side placeholder only, not real security. See README.
+      </p>
+      <div class="field">
+        <label for="adminPass">Admin password</label>
+        <input type="password" id="adminPass" placeholder="Enter admin password">
+      </div>
+      <button class="btn btn-full" id="adminLoginBtn">Enter Admin Panel</button>
+      <div class="form-msg error" id="adminLoginMsg" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div id="adminPanel" style="display:none;">
+    <div class="section-tag">Admin</div>
+    <h2 class="section-title">Orders</h2>
+
+    <div class="admin-note">
+      <b>How order notifications work here:</b> every order placed on checkout.html is saved to this browser's
+      local storage and appears below. If you've configured EmailJS keys in checkout.html, an email is also sent
+      to your admin inbox at the moment of purchase. Without a real backend, this admin view only shows orders
+      placed <em>from this same browser</em> — see README.md for what's needed to make this a shared, multi-device
+      admin dashboard.
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-box"><div class="num" id="statOrders">0</div><div class="label">TOTAL ORDERS</div></div>
+      <div class="stat-box"><div class="num" id="statRevenue">Rs. 0</div><div class="label">TOTAL REVENUE</div></div>
+      <div class="stat-box"><div class="num" id="statItems">0</div><div class="label">ITEMS SOLD</div></div>
+    </div>
+
+    <table class="orders-table">
+      <thead>
+        <tr><th>Order</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th><th>Status</th><th>Date</th></tr>
+      </thead>
+      <tbody id="ordersBody"></tbody>
+    </table>
+
+    <div id="noOrdersMsg" style="display:none; text-align:center; padding:60px 20px; color:var(--bone-dim);">
+      No orders yet. Place a test order from the storefront to see it appear here.
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap footer-bottom"><span>© <span id="year"></span> Western Avenue — She Rides Alone.</span></div>
+</footer>
+
+<script src="assets/js/cart.js"></script>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const ADMIN_DEMO_PASSWORD = 'avenue2024';
+
+  document.getElementById('adminLoginBtn').addEventListener('click', function(){
+    const val = document.getElementById('adminPass').value;
+    if(val === ADMIN_DEMO_PASSWORD){
+      sessionStorage.setItem('wa_admin_ok','1');
+      showAdminPanel();
+    } else {
+      const m = document.getElementById('adminLoginMsg');
+      m.textContent = 'Incorrect password.';
+      m.classList.add('show');
+    }
+  });
+
+  function showAdminPanel(){
+    document.getElementById('adminLoginGate').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    renderOrders();
+  }
+
+  if(sessionStorage.getItem('wa_admin_ok') === '1'){ showAdminPanel(); }
+
+  function renderOrders(){
+    const orders = JSON.parse(localStorage.getItem('wa_orders') || '[]');
+    const body = document.getElementById('ordersBody');
+    const table = document.querySelector('.orders-table');
+    const noOrders = document.getElementById('noOrdersMsg');
+
+    let totalRevenue = 0, totalItems = 0;
+    orders.forEach(function(o){
+      totalRevenue += o.total;
+      totalItems += o.items.reduce(function(s,i){ return s + i.qty; }, 0);
+    });
+    document.getElementById('statOrders').textContent = orders.length;
+    document.getElementById('statRevenue').textContent = waFormatRs(totalRevenue);
+    document.getElementById('statItems').textContent = totalItems;
+
+    if(orders.length === 0){
+      table.style.display = 'none';
+      noOrders.style.display = 'block';
+      return;
+    }
+    table.style.display = '';
+    noOrders.style.display = 'none';
+
+    body.innerHTML = orders.map(function(o){
+      const itemsHtml = o.items.map(function(i){ return i.name + ' × ' + i.qty; }).join('<br>');
+      const dt = new Date(o.date);
+      return '<tr>' +
+        '<td class="order-id">' + o.id + '</td>' +
+        '<td>' + o.customer.name + '<br><span style="font-size:11px;">' + o.customer.email + '</span><br><span style="font-size:11px;">' + o.customer.phone + '</span></td>' +
+        '<td class="order-items-list">' + itemsHtml + '</td>' +
+        '<td>' + o.payment + '</td>' +
+        '<td style="color:var(--gold);">' + waFormatRs(o.total) + '</td>' +
+        '<td><span class="status-pill">' + o.status + '</span></td>' +
+        '<td>' + dt.toLocaleDateString() + '<br><span style="font-size:11px;">' + dt.toLocaleTimeString() + '</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+</script>
+
+</body>
+</html>

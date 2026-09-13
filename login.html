@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In | Western Avenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Sacramento&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/img/logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <a href="index.html" class="logo">
+    <img src="assets/img/logo.jpg" alt="Western Avenue logo" class="logo-img">
+    <span class="logo-text"><span class="display">WESTERN</span><span class="script">Avenue</span></span>
+  </a>
+  <a href="index.html" style="font-size:12px; letter-spacing:0.08em; color:var(--bone-dim);">← Back to shop</a>
+</header>
+
+<main class="auth-main">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Welcome Back</div>
+    <h1 class="auth-title">Sign in.</h1>
+    <p class="auth-sub">New drops, saved bags and order history — right where you left them.</p>
+
+    <div class="form-msg" id="loginMsg"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="loginEmail">Email address</label>
+        <div class="input-wrap">
+          <input type="email" id="loginEmail" name="email" placeholder="you@example.com" autocomplete="email" required>
+          <span class="status-icon" id="loginEmailIcon"></span>
+          <div class="domain-suggest" id="loginDomainSuggest"></div>
+        </div>
+        <div class="field-hint" id="loginEmailHint"></div>
+      </div>
+
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="loginPassword" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" data-target="loginPassword">SHOW</button>
+        </div>
+      </div>
+
+      <div class="row-between">
+        <label class="checkbox-row"><input type="checkbox"> Keep me signed in</label>
+        <a href="#">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="btn btn-full" id="loginSubmit">Sign In</button>
+    </form>
+
+    <div class="divider">OR</div>
+    <button type="button" class="btn btn-full ghost">Continue with Google</button>
+
+    <div class="switch-line">New to Western Avenue? <a href="signup.html">Create an account</a></div>
+  </div>
+</main>
+
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/email-assist.js"></script>
+<script>
+  waSetupEmailAssist('loginEmail','loginEmailIcon','loginEmailHint','loginDomainSuggest');
+  waSetupPasswordToggle();
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const users = JSON.parse(localStorage.getItem('wa_users') || '[]');
+    const user = users.find(function(u){ return u.email.toLowerCase() === email.toLowerCase(); });
+    const msg = document.getElementById('loginMsg');
+
+    if(user){
+      localStorage.setItem('wa_current_user', JSON.stringify(user));
+      msg.textContent = 'Welcome back, ' + user.name + '. Redirecting…';
+      msg.classList.remove('error');
+      msg.classList.add('show');
+      document.getElementById('loginSubmit').disabled = true;
+      setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+    } else {
+      msg.textContent = 'No account found for that email on this browser. Try creating an account first.';
+      msg.classList.add('show','error');
+    }
+  });
+</script>
+
+</body>
+</html>

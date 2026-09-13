@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account | Western Avenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Sacramento&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/img/logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <a href="index.html" class="logo">
+    <img src="assets/img/logo.jpg" alt="Western Avenue logo" class="logo-img">
+    <span class="logo-text"><span class="display">WESTERN</span><span class="script">Avenue</span></span>
+  </a>
+  <a href="index.html" style="font-size:12px; letter-spacing:0.08em; color:var(--bone-dim);">← Back to shop</a>
+</header>
+
+<main class="auth-main">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Join the Herd</div>
+    <h1 class="auth-title">Create account.</h1>
+    <p class="auth-sub">Faster checkout, order tracking, and first access to new drops.</p>
+
+    <div class="form-msg" id="signupMsg"></div>
+
+    <form id="signupForm" novalidate>
+      <div class="field">
+        <label for="signupName">Full name</label>
+        <input type="text" id="signupName" placeholder="Your name" autocomplete="name" required>
+      </div>
+
+      <div class="field">
+        <label for="signupEmail">Email address</label>
+        <div class="input-wrap">
+          <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" required>
+          <span class="status-icon" id="signupEmailIcon"></span>
+          <div class="domain-suggest" id="signupDomainSuggest"></div>
+        </div>
+        <div class="field-hint" id="signupEmailHint"></div>
+      </div>
+
+      <div class="field">
+        <label for="signupPassword">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="signupPassword" placeholder="Create a password" autocomplete="new-password" required>
+          <button type="button" class="pw-toggle" data-target="signupPassword">SHOW</button>
+        </div>
+        <div class="pw-strength" id="signupPwBars"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="pw-strength-label" id="signupPwLabel"></div>
+      </div>
+
+      <div class="row-between">
+        <label class="checkbox-row"><input type="checkbox" required> I agree to the Terms &amp; Privacy Policy</label>
+      </div>
+
+      <button type="submit" class="btn btn-full" id="signupSubmit">Create Account</button>
+    </form>
+
+    <div class="divider">OR</div>
+    <button type="button" class="btn btn-full ghost">Continue with Google</button>
+
+    <div class="switch-line">Already have an account? <a href="login.html">Sign in</a></div>
+  </div>
+</main>
+
+<script src="assets/js/cart.js"></script>
+<script src="assets/js/email-assist.js"></script>
+<script>
+  waSetupEmailAssist('signupEmail','signupEmailIcon','signupEmailHint','signupDomainSuggest');
+  waSetupPasswordToggle();
+  waSetupPasswordStrength('signupPassword','signupPwBars','signupPwLabel');
+
+  document.getElementById('signupForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const msg = document.getElementById('signupMsg');
+
+    if(!waIsValidEmail(email)){
+      msg.textContent = 'Please enter a valid email address.';
+      msg.classList.add('show','error');
+      return;
+    }
+    if(password.length < 6){
+      msg.textContent = 'Password should be at least 6 characters.';
+      msg.classList.add('show','error');
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('wa_users') || '[]');
+    if(users.some(function(u){ return u.email.toLowerCase() === email.toLowerCase(); })){
+      msg.textContent = 'An account with that email already exists on this browser. Try signing in instead.';
+      msg.classList.add('show','error');
+      return;
+    }
+
+    /* NOTE: demo-only storage. Passwords are stored in localStorage in plain
+       text for this static prototype — do NOT do this in a real production
+       app. See README for what real authentication needs (a backend + hashed
+       passwords, e.g. via Firebase Auth, Supabase Auth, or your own server). */
+    users.push({ name: name, email: email, password: password, createdAt: new Date().toISOString() });
+    localStorage.setItem('wa_users', JSON.stringify(users));
+    localStorage.setItem('wa_current_user', JSON.stringify({ name: name, email: email }));
+
+    msg.classList.remove('error');
+    msg.textContent = 'Account created. Redirecting you in…';
+    msg.classList.add('show');
+    document.getElementById('signupSubmit').disabled = true;
+    setTimeout(function(){ window.location.href = 'index.html'; }, 900);
+  });
+</script>
+
+</body>
+</html>

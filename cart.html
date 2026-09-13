@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Bag | Western Avenue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Sacramento&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="assets/img/logo.jpg" type="image/jpeg">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site">
+  <a href="index.html" class="logo">
+    <img src="assets/img/logo.jpg" alt="Western Avenue logo" class="logo-img">
+    <span class="logo-text"><span class="display">WESTERN</span><span class="script">Avenue</span></span>
+  </a>
+  <nav class="primary">
+    <a href="index.html#shop">Shop</a>
+    <a href="index.html#drop">The Drop</a>
+    <a href="index.html#about">About</a>
+  </nav>
+  <div class="nav-icons">
+    <a href="login.html" aria-label="Account">ACCOUNT</a>
+    <a href="cart.html" aria-label="Cart" data-cart-icon>CART <sup class="cart-count">0</sup></a>
+  </div>
+</header>
+
+<div class="page-header">
+  <h1>Your Bag</h1>
+  <p>Everything you've picked off the trail so far.</p>
+</div>
+
+<div class="wrap">
+  <div class="cart-layout">
+    <div id="cartContent"></div>
+
+    <div class="summary-card">
+      <h3>Order Summary</h3>
+      <div class="summary-row"><span>Subtotal</span><span id="sumSubtotal">Rs. 0.00</span></div>
+      <div class="summary-row"><span>Shipping</span><span id="sumShipping">Free</span></div>
+      <div class="summary-row total"><span>Total</span><span id="sumTotal">Rs. 0.00</span></div>
+      <a href="checkout.html" class="btn btn-full" id="checkoutBtn" style="margin-top:20px;">Proceed to Checkout ↗</a>
+      <a href="index.html#shop" class="btn ghost btn-full" style="margin-top:10px;">Continue Shopping</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap footer-bottom">
+    <span>© <span id="year"></span> Western Avenue — She Rides Alone.</span>
+  </div>
+</footer>
+
+<script src="assets/js/cart.js"></script>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  function renderCart(){
+    const cart = waGetCart();
+    const content = document.getElementById('cartContent');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    if(cart.length === 0){
+      content.innerHTML = '<div class="cart-empty">Your bag is empty. <a href="index.html#shop">Go find something worth riding in.</a></div>';
+      checkoutBtn.setAttribute('aria-disabled','true');
+      checkoutBtn.style.pointerEvents = 'none';
+      checkoutBtn.style.opacity = '0.4';
+    } else {
+      checkoutBtn.style.pointerEvents = '';
+      checkoutBtn.style.opacity = '';
+      content.innerHTML = '<div class="cart-list">' + cart.map(function(item){
+        return '<div class="cart-row" data-id="' + item.id + '">' +
+          '<div class="cart-thumb"><svg viewBox="0 0 60 60" aria-hidden="true"><rect x="14" y="10" width="32" height="42" fill="#9a3b22"/><path d="M14 10 L30 20 L46 10" stroke="#e8dcc8" stroke-width="2" fill="none"/></svg></div>' +
+          '<div class="cart-row-info"><h3>' + item.name + '</h3><div class="price">' + waFormatRs(item.price) + ' each</div></div>' +
+          '<div class="qty-control">' +
+            '<button type="button" data-action="dec" aria-label="Decrease quantity">−</button>' +
+            '<span>' + item.qty + '</span>' +
+            '<button type="button" data-action="inc" aria-label="Increase quantity">+</button>' +
+          '</div>' +
+          '<div class="cart-row-total">' + waFormatRs(item.price * item.qty) + '</div>' +
+          '<button type="button" class="cart-row-remove" data-action="remove">Remove</button>' +
+        '</div>';
+      }).join('') + '</div>';
+    }
+
+    const subtotal = waCartTotal();
+    document.getElementById('sumSubtotal').textContent = waFormatRs(subtotal);
+    document.getElementById('sumTotal').textContent = waFormatRs(subtotal);
+  }
+
+  document.getElementById('cartContent').addEventListener('click', function(e){
+    const btn = e.target.closest('button[data-action]');
+    if(!btn) return;
+    const row = btn.closest('.cart-row');
+    const id = row.getAttribute('data-id');
+    const cart = waGetCart();
+    const item = cart.find(function(i){ return i.id === id; });
+    if(!item) return;
+
+    if(btn.getAttribute('data-action') === 'inc'){ waSetQty(id, item.qty + 1); }
+    else if(btn.getAttribute('data-action') === 'dec'){ waSetQty(id, item.qty - 1); }
+    else if(btn.getAttribute('data-action') === 'remove'){ waRemoveItem(id); }
+
+    renderCart();
+  });
+
+  renderCart();
+</script>
+
+</body>
+</html>
